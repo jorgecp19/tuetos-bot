@@ -1,0 +1,49 @@
+{
+  "name": "api-express",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "crypto": "^1.0.1",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "joi": "^14.3.1",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^5.7.12",
+    "nodemon": "^1.19.4",
+    "tsc-watch": "^4.0.0",
+    "typescript": "^3.7.2",
+    "uuid": "^3.3.3",
+    "uuid-validate": "^0.0.3"
+  },
+  "devDependencies": {
+    "@types/body-parser": "^1.17.1",
+    "@types/express": "^4.17.2",
+    "@types/joi": "^14.3.4",
+    "@types/jsonwebtoken": "^8.3.5",
+    "@types/mongoose": "^5.5.32",
+    "@types/node": "^12.12.14",
+    "@types/uuid": "^3.4.6",
+    "@types/uuid-validate": "^0.0.1",
+    "@typescript-eslint/parser": "^2.9.0",
+    "eslint": "^6.7.1",
+    "eslint-config-prettier": "^6.7.0",
+    "eslint-plugin-prettier": "^3.1.1",
+    "husky": "^3.1.0",
+    "lint-staged": "^9.5.0",
+    "prettier": "^1.19.1"
+  },
+  "scripts": {
+    "start": "tsc-watch --build --onSuccess 'node --require dotenv/config server.js'",
+    "clean": "git clean -fx tsconfig.tsbuildinfo server.* '**/*.js' '**/*.js.map' '**/*.d.ts' '**/*.d.ts.map'",
+    "lint": "eslint **/*.ts"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn lint-staged"
+    }
+  },
+  "lint-staged": {
+    "**/*.ts": "eslint"
+  }
+}
