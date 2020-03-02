@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "42f8adfc-7e6b-45b3-8e71-84627754526b",
+		"_postman_id": "3012dacf-34ad-440c-80fc-9542192c3cda",
 		"name": "Twitter API",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -29,6 +29,11 @@
 					"type": "oauth1",
 					"oauth1": [
 						{
+							"key": "addParamsToHeader",
+							"value": true,
+							"type": "boolean"
+						},
+						{
 							"key": "consumerSecret",
 							"value": "{{consumer_secret}}",
 							"type": "string"
@@ -37,11 +42,6 @@
 							"key": "consumerKey",
 							"value": "{{consumer_key}}",
 							"type": "string"
-						},
-						{
-							"key": "addParamsToHeader",
-							"value": true,
-							"type": "boolean"
 						},
 						{
 							"key": "signatureMethod",
@@ -78,52 +78,6 @@
 						{
 							"key": "oauth_callback",
 							"value": "{{oauth_callback}}"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Access token",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"id": "deaa86e6-af8c-4715-8065-ba8c4caec2af",
-						"exec": [
-							""
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"auth": {
-					"type": "noauth"
-				},
-				"method": "POST",
-				"header": [],
-				"url": {
-					"raw": "https://api.twitter.com/oauth/access_tokens?oauth_token={{oauth_token}}&oauth_verifier={{oauth_verifier}}",
-					"protocol": "https",
-					"host": [
-						"api",
-						"twitter",
-						"com"
-					],
-					"path": [
-						"oauth",
-						"access_tokens"
-					],
-					"query": [
-						{
-							"key": "oauth_token",
-							"value": "{{oauth_token}}"
-						},
-						{
-							"key": "oauth_verifier",
-							"value": "{{oauth_verifier}}"
 						}
 					]
 				}
@@ -173,6 +127,61 @@
 			"response": []
 		},
 		{
+			"name": "Access token",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "deaa86e6-af8c-4715-8065-ba8c4caec2af",
+						"exec": [
+							"list = responseBody.split(\"&\");",
+							"oauthToken = list[0].split(\"=\", 2)[1];",
+							"oauthSecret = list[1].split(\"=\", 2)[1];",
+							"userId = list[2].split(\"=\", 2)[1];",
+							"screenName = list[3].split(\"=\", 2)[1];",
+							"",
+							"postman.setEnvironmentVariable(\"oauth_token\", oauthToken);",
+							"postman.setEnvironmentVariable(\"oauth_token_secret\", oauthSecret);",
+							"postman.setEnvironmentVariable(\"user_id\", userId);",
+							"postman.setEnvironmentVariable(\"screen_name\", screenName);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "https://api.twitter.com/oauth/access_token?oauth_token={{oauth_token}}&oauth_verifier={{oauth_verifier}}",
+					"protocol": "https",
+					"host": [
+						"api",
+						"twitter",
+						"com"
+					],
+					"path": [
+						"oauth",
+						"access_token"
+					],
+					"query": [
+						{
+							"key": "oauth_token",
+							"value": "{{oauth_token}}"
+						},
+						{
+							"key": "oauth_verifier",
+							"value": "{{oauth_verifier}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Send tweet",
 			"event": [
 				{
@@ -191,18 +200,23 @@
 					"type": "oauth1",
 					"oauth1": [
 						{
-							"key": "token",
-							"value": "{{access_token}}",
+							"key": "consumerSecret",
+							"value": "{{consumer_secret}}",
 							"type": "string"
+						},
+						{
+							"key": "addEmptyParamsToSign",
+							"value": false,
+							"type": "boolean"
 						},
 						{
 							"key": "tokenSecret",
-							"value": "",
+							"value": "{{oauth_token_secret}}",
 							"type": "string"
 						},
 						{
-							"key": "consumerSecret",
-							"value": "{{consumer_secret}}",
+							"key": "token",
+							"value": "{{oauth_token}}",
 							"type": "string"
 						},
 						{
@@ -224,18 +238,13 @@
 							"key": "version",
 							"value": "1.0",
 							"type": "string"
-						},
-						{
-							"key": "addEmptyParamsToSign",
-							"value": false,
-							"type": "boolean"
 						}
 					]
 				},
 				"method": "POST",
 				"header": [],
 				"url": {
-					"raw": "https://api.twitter.com/1.1/statuses/update.json?status=Hello%20world",
+					"raw": "https://api.twitter.com/1.1/statuses/update.json?status=Hello",
 					"protocol": "https",
 					"host": [
 						"api",
@@ -250,7 +259,7 @@
 					"query": [
 						{
 							"key": "status",
-							"value": "Hello%20world"
+							"value": "Hello"
 						}
 					]
 				}
