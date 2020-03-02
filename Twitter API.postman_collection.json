@@ -1,0 +1,262 @@
+{
+	"info": {
+		"_postman_id": "42f8adfc-7e6b-45b3-8e71-84627754526b",
+		"name": "Twitter API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Request token",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "deaa86e6-af8c-4715-8065-ba8c4caec2af",
+						"exec": [
+							"list = responseBody.split(\"&\");",
+							"oauthToken = list[0].split(\"=\", 2)[1];",
+							"oauthSecret = list[1].split(\"=\", 2)[1];",
+							"",
+							"postman.setEnvironmentVariable(\"oauth_token\", oauthToken);",
+							"postman.setEnvironmentVariable(\"oauth_token_secret\", oauthSecret);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "oauth1",
+					"oauth1": [
+						{
+							"key": "consumerSecret",
+							"value": "{{consumer_secret}}",
+							"type": "string"
+						},
+						{
+							"key": "consumerKey",
+							"value": "{{consumer_key}}",
+							"type": "string"
+						},
+						{
+							"key": "addParamsToHeader",
+							"value": true,
+							"type": "boolean"
+						},
+						{
+							"key": "signatureMethod",
+							"value": "HMAC-SHA1",
+							"type": "string"
+						},
+						{
+							"key": "version",
+							"value": "1.0",
+							"type": "string"
+						},
+						{
+							"key": "addEmptyParamsToSign",
+							"value": false,
+							"type": "boolean"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "https://api.twitter.com/oauth/request_token?oauth_callback={{oauth_callback}}",
+					"protocol": "https",
+					"host": [
+						"api",
+						"twitter",
+						"com"
+					],
+					"path": [
+						"oauth",
+						"request_token"
+					],
+					"query": [
+						{
+							"key": "oauth_callback",
+							"value": "{{oauth_callback}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Access token",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "deaa86e6-af8c-4715-8065-ba8c4caec2af",
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "https://api.twitter.com/oauth/access_tokens?oauth_token={{oauth_token}}&oauth_verifier={{oauth_verifier}}",
+					"protocol": "https",
+					"host": [
+						"api",
+						"twitter",
+						"com"
+					],
+					"path": [
+						"oauth",
+						"access_tokens"
+					],
+					"query": [
+						{
+							"key": "oauth_token",
+							"value": "{{oauth_token}}"
+						},
+						{
+							"key": "oauth_verifier",
+							"value": "{{oauth_verifier}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Authenticate",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "deaa86e6-af8c-4715-8065-ba8c4caec2af",
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://api.twitter.com/oauth/authenticate?oauth_token={{oauth_token}}",
+					"protocol": "https",
+					"host": [
+						"api",
+						"twitter",
+						"com"
+					],
+					"path": [
+						"oauth",
+						"authenticate"
+					],
+					"query": [
+						{
+							"key": "oauth_token",
+							"value": "{{oauth_token}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Send tweet",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "deaa86e6-af8c-4715-8065-ba8c4caec2af",
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "oauth1",
+					"oauth1": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						},
+						{
+							"key": "tokenSecret",
+							"value": "",
+							"type": "string"
+						},
+						{
+							"key": "consumerSecret",
+							"value": "{{consumer_secret}}",
+							"type": "string"
+						},
+						{
+							"key": "consumerKey",
+							"value": "{{consumer_key}}",
+							"type": "string"
+						},
+						{
+							"key": "addParamsToHeader",
+							"value": true,
+							"type": "boolean"
+						},
+						{
+							"key": "signatureMethod",
+							"value": "HMAC-SHA1",
+							"type": "string"
+						},
+						{
+							"key": "version",
+							"value": "1.0",
+							"type": "string"
+						},
+						{
+							"key": "addEmptyParamsToSign",
+							"value": false,
+							"type": "boolean"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "https://api.twitter.com/1.1/statuses/update.json?status=Hello%20world",
+					"protocol": "https",
+					"host": [
+						"api",
+						"twitter",
+						"com"
+					],
+					"path": [
+						"1.1",
+						"statuses",
+						"update.json"
+					],
+					"query": [
+						{
+							"key": "status",
+							"value": "Hello%20world"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}
