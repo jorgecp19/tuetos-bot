@@ -1,10 +1,10 @@
 import express from "express";
 
-import botRouter from "./bot";
+import telegramRouter from "./telegram";
 
 const routes = express.Router();
 
 // Controller
-routes.use("/", botRouter);
+routes.use("/", telegramRouter);
 
 export default routes;
