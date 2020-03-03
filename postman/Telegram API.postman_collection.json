@@ -1,0 +1,134 @@
+{
+	"info": {
+		"_postman_id": "5d72b45f-3fea-4d06-b956-2f9a68bc2f4c",
+		"name": "Telegram API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Send message",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "deaa86e6-af8c-4715-8065-ba8c4caec2af",
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "https://api.telegram.org/bot{{bot_token}}/sendMessage?chat_id&text=Wenasss",
+					"protocol": "https",
+					"host": [
+						"api",
+						"telegram",
+						"org"
+					],
+					"path": [
+						"bot{{bot_token}}",
+						"sendMessage"
+					],
+					"query": [
+						{
+							"key": "chat_id",
+							"value": null
+						},
+						{
+							"key": "text",
+							"value": "Wenasss"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetMe",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "deaa86e6-af8c-4715-8065-ba8c4caec2af",
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "https://api.telegram.org/bot{{bot_token}}/getMe",
+					"protocol": "https",
+					"host": [
+						"api",
+						"telegram",
+						"org"
+					],
+					"path": [
+						"bot{{bot_token}}",
+						"getMe"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "setWebhook",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "deaa86e6-af8c-4715-8065-ba8c4caec2af",
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "https://api.telegram.org/bot{{bot_token}}/setWebhook?url=https://2a86696c.ngrok.io/telegram/get-update",
+					"protocol": "https",
+					"host": [
+						"api",
+						"telegram",
+						"org"
+					],
+					"path": [
+						"bot{{bot_token}}",
+						"setWebhook"
+					],
+					"query": [
+						{
+							"key": "url",
+							"value": "https://2a86696c.ngrok.io/telegram/get-update"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}
