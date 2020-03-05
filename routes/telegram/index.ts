@@ -8,35 +8,40 @@ const telegramRouter = express.Router();
 const getOauthSignature = (
     method: string,
     url: string,
-    oauthCallback: string,
-    oauthConsumerKey: string,
-    oauthNonce: string,
-    oauthSignatureMethod: string,
-    oauthTimestamp: string,
-    oauthVersion: string,
+    params: { [label: string]: string },
     oauthConsumerSecret: string,
 ) => {
-    const paramsStr: string = `${method}&\
-        oauth_callback=${oauthCallback}&\
-        oauth_consumer_key=${oauthConsumerKey}&\
-        oauth_nonce=${oauthNonce}&\
-        oauth_signature_method=${oauthSignatureMethod}&\
-        oauth_timestamp=${oauthTimestamp}&\
-        oauth_version=${oauthVersion}`;
-
-    return paramsStr;
-    /*
-    let paramsString: string = "";
     const keyList = Object.keys(params);
-    keyList.forEach((key: string, index: number) => {
-        paramsString = paramsString + key + "=" + params[key];
-        if (index !== keyList.length - 1) {
+    const keyListEncoded = keyList
+        .map((value) => encodeURIComponent(value))
+        .sort();
+
+    let paramsString: string = "";
+    keyListEncoded.forEach((key: string, index: number) => {
+        paramsString =
+            paramsString + key + "=" + encodeURIComponent(params[key]);
+        if (index !== keyListEncoded.length - 1) {
             paramsString = paramsString + "&";
         }
     });
-    console.log(paramsString);
-    return paramsString;
-    */
+
+    const signatureBaseStr =
+        method.toUpperCase() +
+        "&" +
+        encodeURIComponent(url) +
+        "&" +
+        encodeURIComponent(paramsString);
+
+    console.log(signatureBaseStr);
+    //console.log(oauthConsumerSecret);
+
+    const signature = crypto
+        .createHmac("sha1", encodeURIComponent(oauthConsumerSecret) + "&")
+        .update(signatureBaseStr)
+        .digest("base64");
+
+    console.log(signature);
+    return signature;
 };
 
 const getAuthorizationHeader = (
@@ -47,12 +52,7 @@ const getAuthorizationHeader = (
     oauthVersion: string,
     oauthSignature: string,
 ) => {
-    const authorizationHeaderStr: string = `Oauth oauth_consumer_key=${oauthConsumerKey},\
-        oauth_nonce=${oauthNonce},\
-        oauth_signature_method=${oauthSignatureMethod},\
-        oauth_signature=${oauthSignature},\
-        oauth_timestamp=${oauthTimestamp},\
-        oauth_version=${oauthVersion}`;
+    const authorizationHeaderStr: string = `Oauth oauth_consumer_key=${oauthConsumerKey},oauth_nonce=${oauthNonce},oauth_signature_method=${oauthSignatureMethod},oauth_signature=${oauthSignature},oauth_timestamp=${oauthTimestamp},oauth_version=${oauthVersion}`;
 
     return authorizationHeaderStr;
 };
@@ -86,45 +86,48 @@ const getUpdate = async (req: Request, res: Response) => {
             const twitterApiUrl = process.env.TWITTER_API_URL!;
 
             const oauthConsumerSecret = process.env
-                .TELEGRAM_OAUTH_CONSUMER_SECRET!;
+                .TWITTER_OAUTH_CONSUMER_SECRET!;
             const oauthCallback = "oob";
-            const oauthConsumerKey = process.env.TELEGRAM_OAUTH_CONSUMER_KEY!;
+            const oauthConsumerKey = process.env.TWITTER_OAUTH_CONSUMER_KEY!;
             const oauthTimestamp = getOauthTimestamp().toString();
             const oauthNonce = getOauthNonce(oauthTimestamp);
             const oauthSignatureMethod = "HMAC-SHA1";
             const oauthVersion = "1.0";
 
-            /*const params: { [label: string]: string } = {
-                oauth_callback: "oob",
-                oauth_consumer_key: process.env.TELEGRAM_OAUTH_CONSUMER_KEY!,
-                oauth_nonce: getOauthNonce(oauthTimestamp),
-                oauth_signature_method: "HMAC-SHA1",
+            const params: { [label: string]: string } = {
+                oauth_callback: oauthCallback,
+                oauth_consumer_key: oauthConsumerKey,
+                oauth_nonce: oauthNonce,
+                oauth_signature_method: oauthSignatureMethod,
                 oauth_timestamp: oauthTimestamp,
-                oauth_version: "1.0",
-            };*/
+                oauth_version: oauthVersion,
+            };
 
             const method = "post";
 
-            const url =
-                twitterApiUrl +
-                "oauth/request_token?oauth_callback=" +
-                oauthCallback;
+            const url = twitterApiUrl + "oauth/request_token";
 
             const oauthSignature = getOauthSignature(
                 method,
                 url,
-                oauthCallback,
-                oauthConsumerKey,
-                oauthNonce,
-                oauthSignatureMethod,
-                oauthTimestamp,
-                oauthVersion,
+                params,
                 oauthConsumerSecret,
+            );
+
+            console.log(
+                getAuthorizationHeader(
+                    oauthConsumerKey,
+                    oauthNonce,
+                    oauthSignatureMethod,
+                    oauthTimestamp,
+                    oauthVersion,
+                    oauthSignature,
+                ),
             );
 
             axios({
                 method,
-                url,
+                url: url + "?oauth_callback=" + oauthCallback,
                 headers: {
                     Authorization: getAuthorizationHeader(
                         oauthConsumerKey,
@@ -135,6 +138,7 @@ const getUpdate = async (req: Request, res: Response) => {
                         oauthSignature,
                     ),
                 },
+                responseType: "json",
             })
                 .then((response) => {
                     axios({
@@ -147,12 +151,20 @@ const getUpdate = async (req: Request, res: Response) => {
                             chat.id +
                             "&text=" +
                             response,
-                    }).then((response) =>
-                        //response.data.pipe(fs.createWriteStream("ada_lovelace.jpg"));
-                        console.log("    * respuesta enviada"),
-                    );
+                    })
+                        .then((response) =>
+                            //response.data.pipe(fs.createWriteStream("ada_lovelace.jpg"));
+                            console.log("    * respuesta enviada"),
+                        )
+                        .catch((response) => {
+                            console.log(response);
+                            console.log("falló telegram");
+                        });
                 })
-                .catch((response) => console.log(response));
+                .catch((response) => {
+                    console.log(response);
+                    console.log("falló twitter");
+                });
         }
     }
 
