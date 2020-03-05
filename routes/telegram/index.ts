@@ -32,27 +32,31 @@ const getOauthSignature = (
         "&" +
         encodeURIComponent(paramsString);
 
-    console.log(signatureBaseStr);
-    //console.log(oauthConsumerSecret);
-
     const signature = crypto
         .createHmac("sha1", encodeURIComponent(oauthConsumerSecret) + "&")
         .update(signatureBaseStr)
         .digest("base64");
 
-    console.log(signature);
     return signature;
 };
 
-const getAuthorizationHeader = (
-    oauthConsumerKey: string,
-    oauthNonce: string,
-    oauthSignatureMethod: string,
-    oauthTimestamp: string,
-    oauthVersion: string,
-    oauthSignature: string,
-) => {
-    const authorizationHeaderStr: string = `Oauth oauth_consumer_key=${oauthConsumerKey},oauth_nonce=${oauthNonce},oauth_signature_method=${oauthSignatureMethod},oauth_signature=${oauthSignature},oauth_timestamp=${oauthTimestamp},oauth_version=${oauthVersion}`;
+const getAuthorizationHeader = (params: { [label: string]: string }) => {
+    //const authorizationHeaderStr: string = `Oauth oauth_consumer_key=${oauthConsumerKey},oauth_nonce=${oauthNonce},oauth_signature_method=${oauthSignatureMethod},oauth_signature=${oauthSignature},oauth_timestamp=${oauthTimestamp},oauth_version=${oauthVersion}`;
+
+    let authorizationHeaderStr = "OAuth ";
+
+    const keyList = Object.keys(params);
+    keyList.forEach((key: string, index: number) => {
+        authorizationHeaderStr =
+            authorizationHeaderStr +
+            encodeURIComponent(key) +
+            '="' +
+            encodeURIComponent(params[key]) +
+            '"';
+        if (index !== keyList.length - 1) {
+            authorizationHeaderStr = authorizationHeaderStr + ", ";
+        }
+    });
 
     return authorizationHeaderStr;
 };
@@ -105,42 +109,33 @@ const getUpdate = async (req: Request, res: Response) => {
 
             const method = "post";
 
-            const url = twitterApiUrl + "oauth/request_token";
+            const requestTokenUrl = twitterApiUrl + "oauth/request_token";
 
             const oauthSignature = getOauthSignature(
                 method,
-                url,
+                requestTokenUrl,
                 params,
                 oauthConsumerSecret,
             );
 
-            console.log(
-                getAuthorizationHeader(
-                    oauthConsumerKey,
-                    oauthNonce,
-                    oauthSignatureMethod,
-                    oauthTimestamp,
-                    oauthVersion,
-                    oauthSignature,
-                ),
-            );
+            const authorization: { [label: string]: string } = {
+                oauth_consumer_key: oauthConsumerKey,
+                oauth_nonce: oauthNonce,
+                oauth_signature: oauthSignature,
+                oauth_signature_method: oauthSignatureMethod,
+                oauth_timestamp: oauthTimestamp,
+                oauth_version: oauthVersion,
+            };
 
             axios({
                 method,
-                url: url + "?oauth_callback=" + oauthCallback,
+                url: requestTokenUrl + "?oauth_callback=" + oauthCallback,
                 headers: {
-                    Authorization: getAuthorizationHeader(
-                        oauthConsumerKey,
-                        oauthNonce,
-                        oauthSignatureMethod,
-                        oauthTimestamp,
-                        oauthVersion,
-                        oauthSignature,
-                    ),
+                    Authorization: getAuthorizationHeader(authorization),
                 },
-                responseType: "json",
             })
                 .then((response) => {
+                    console.log(response.data);
                     axios({
                         method: "post",
                         url:
@@ -150,11 +145,10 @@ const getUpdate = async (req: Request, res: Response) => {
                             "/sendMessage?chat_id=" +
                             chat.id +
                             "&text=" +
-                            response,
+                            encodeURIComponent(response.data),
                     })
                         .then((response) =>
-                            //response.data.pipe(fs.createWriteStream("ada_lovelace.jpg"));
-                            console.log("    * respuesta enviada"),
+                            console.log("    * request_token SUCCESS"),
                         )
                         .catch((response) => {
                             console.log(response);
@@ -163,7 +157,7 @@ const getUpdate = async (req: Request, res: Response) => {
                 })
                 .catch((response) => {
                     console.log(response);
-                    console.log("falló twitter");
+                    console.log("    * request_token FAIL");
                 });
         }
     }
