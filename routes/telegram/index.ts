@@ -41,8 +41,6 @@ const getOauthSignature = (
 };
 
 const getAuthorizationHeader = (params: { [label: string]: string }) => {
-    //const authorizationHeaderStr: string = `Oauth oauth_consumer_key=${oauthConsumerKey},oauth_nonce=${oauthNonce},oauth_signature_method=${oauthSignatureMethod},oauth_signature=${oauthSignature},oauth_timestamp=${oauthTimestamp},oauth_version=${oauthVersion}`;
-
     let authorizationHeaderStr = "OAuth ";
 
     const keyList = Object.keys(params);
@@ -72,6 +70,13 @@ const getOauthNonce = (oauthTimestamp: string) => {
         .digest("hex");
 };
 
+const getOauthToken = (str: string) => {
+    const list = str.split("&");
+    const oauthToken = list[0].split("=", 2)[1];
+    const oauthSecret = list[1].split("=", 2)[1];
+    return { oauth_token: oauthToken, oauth_secret: oauthSecret };
+};
+
 const getUpdate = async (req: Request, res: Response) => {
     console.log("-- telegram update");
 
@@ -84,11 +89,11 @@ const getUpdate = async (req: Request, res: Response) => {
         console.log("    * " + chat.username);
         console.log("    * " + text);
 
-        if (text === "/login") {
-            const botToken = process.env.TELEGRAM_BOT_TOKEN!;
-            const telegramApiUrl = process.env.TELEGRAM_API_URL!;
-            const twitterApiUrl = process.env.TWITTER_API_URL!;
+        const botToken = process.env.TELEGRAM_BOT_TOKEN!;
+        const telegramApiUrl = process.env.TELEGRAM_API_URL!;
+        const twitterApiUrl = process.env.TWITTER_API_URL!;
 
+        if (text === "/login") {
             const oauthConsumerSecret = process.env
                 .TWITTER_OAUTH_CONSUMER_SECRET!;
             const oauthCallback = "oob";
@@ -136,6 +141,11 @@ const getUpdate = async (req: Request, res: Response) => {
             })
                 .then((response) => {
                     console.log(response.data);
+                    console.log("    * authorizate SUCCESS");
+                    const authorizateUrl =
+                        twitterApiUrl +
+                        "oauth/authenticate?oauth_token=" +
+                        getOauthToken(response.data).oauth_token;
                     axios({
                         method: "post",
                         url:
@@ -145,19 +155,55 @@ const getUpdate = async (req: Request, res: Response) => {
                             "/sendMessage?chat_id=" +
                             chat.id +
                             "&text=" +
-                            encodeURIComponent(response.data),
+                            encodeURIComponent(authorizateUrl),
                     })
-                        .then((response) =>
-                            console.log("    * request_token SUCCESS"),
-                        )
+                        .then(() => console.log("    * sendEmail SUCCESS"))
                         .catch((response) => {
                             console.log(response);
-                            console.log("falló telegram");
+                            console.log("    * sendEmail FAIL");
                         });
                 })
                 .catch((response) => {
                     console.log(response);
                     console.log("    * request_token FAIL");
+                });
+        } else if (text.split(" ", 2)[0] === "/code") {
+            const oauthVerifier = text.split(" ", 2)[1];
+            const requestTokenUrl = twitterApiUrl + "oauth/access_token";
+
+            axios({
+                method: "post",
+                url:
+                    requestTokenUrl +
+                    "?oauth_token=" +
+                    encodeURIComponent("2doZ9QAAAAABC1WNAAABcKwHHzU") +
+                    "&" +
+                    "oauth_verifier=" +
+                    encodeURIComponent(oauthVerifier),
+            })
+                .then((response) => {
+                    console.log(response.data);
+                    console.log("    * access_token SUCCESS");
+                    axios({
+                        method: "post",
+                        url:
+                            telegramApiUrl +
+                            "bot" +
+                            botToken +
+                            "/sendMessage?chat_id=" +
+                            chat.id +
+                            "&text=" +
+                            encodeURIComponent("Registro completado :D"),
+                    })
+                        .then(() => console.log("    * sendEmail SUCCESS"))
+                        .catch((response) => {
+                            console.log(response);
+                            console.log("    * sendEmail FAIL");
+                        });
+                })
+                .catch((response) => {
+                    console.log(response);
+                    console.log("    * access_token FAIL");
                 });
         }
     }
@@ -168,11 +214,3 @@ const getUpdate = async (req: Request, res: Response) => {
 telegramRouter.post("/telegram/get-update", getUpdate);
 
 export default telegramRouter;
-
-/*
-    headers: {
-        'Authorization': 'Basic Y2xpZW50OnNlY3JldA==',
-        'Content-Type': 'application/x-www-form-urlencoded'
-    }
-
-*/
