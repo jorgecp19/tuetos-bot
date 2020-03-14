@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import { Update } from "../../types/update";
 import axios from "axios";
 import crypto from "crypto";
+import { fireDb } from "../../firebase";
 
 const telegramRouter = express.Router();
 
@@ -77,6 +78,33 @@ const getOauthToken = (str: string) => {
     return { oauth_token: oauthToken, oauth_secret: oauthSecret };
 };
 
+const insertCredentials = async (
+    oauthToken: string,
+    oauthTokenSecret: string,
+) => {
+    await fireDb
+        .collection("credentials")
+        .doc()
+        .set({
+            oauth_token: oauthToken,
+            oauth_token_secret: oauthTokenSecret,
+        });
+};
+
+const getCredentials = async () => {
+    const querySnapshot = await fireDb
+        .collection("credentials")
+        .limit(1)
+        .get();
+    let documentData: any;
+    querySnapshot.forEach((doc) => {
+        //console.log("AAAAAA")
+        //console.log(doc.data())
+        documentData = doc.data();
+    });
+    return documentData;
+};
+
 const getUpdate = async (req: Request, res: Response) => {
     console.log("-- telegram update");
 
@@ -139,13 +167,17 @@ const getUpdate = async (req: Request, res: Response) => {
                     Authorization: getAuthorizationHeader(authorization),
                 },
             })
-                .then((response) => {
+                .then(async (response) => {
                     console.log(response.data);
+                    const { oauth_token, oauth_secret } = getOauthToken(
+                        response.data,
+                    );
+                    await insertCredentials(oauth_token, oauth_secret);
                     console.log("    * authorizate SUCCESS");
                     const authorizateUrl =
                         twitterApiUrl +
                         "oauth/authenticate?oauth_token=" +
-                        getOauthToken(response.data).oauth_token;
+                        oauth_token;
                     axios({
                         method: "post",
                         url:
@@ -170,13 +202,14 @@ const getUpdate = async (req: Request, res: Response) => {
         } else if (text.split(" ", 2)[0] === "/code") {
             const oauthVerifier = text.split(" ", 2)[1];
             const requestTokenUrl = twitterApiUrl + "oauth/access_token";
-
+            const { oauth_token } = await getCredentials();
+            console.log(oauth_token);
             axios({
                 method: "post",
                 url:
                     requestTokenUrl +
                     "?oauth_token=" +
-                    encodeURIComponent("2doZ9QAAAAABC1WNAAABcKwHHzU") +
+                    encodeURIComponent(oauth_token) +
                     "&" +
                     "oauth_verifier=" +
                     encodeURIComponent(oauthVerifier),
